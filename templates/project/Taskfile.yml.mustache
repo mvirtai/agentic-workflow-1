@@ -1,0 +1,359 @@
+version: '3'
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  version:
+    desc: Print current application version
+    cmds:
+      - cat VERSION
+
+  version:bump:
+    desc: "Bump version in all relevant project files. Usage: task version:bump PART=patch|minor|major"
+    vars:
+      PART: '{{default "patch" .PART}}'
+    cmds:
+      - |
+        CURRENT=$(cat VERSION 2>/dev/null || echo "0.1.0")
+        IFS="." read -r MAJOR MINOR PATCH <<< "$CURRENT"
+        case "{{.PART}}" in
+          major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+          minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+          patch) PATCH=$((PATCH + 1)) ;;
+          *) echo "Unknown part: {{.PART}}"; exit 1 ;;
+        esac
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        echo "$NEW_VERSION" > VERSION
+        echo "✅ Version bumped from $CURRENT to $NEW_VERSION"
+
+  version:set:
+    desc: "Set explicit version in all relevant project files. Usage: task version:set VER=0.2.0"
+    cmds:
+      - |
+        NEW_VERSION="{{.VER}}"
+        if [ -z "$NEW_VERSION" ]; then echo "Usage: task version:set VER=x.y.z"; exit 1; fi
+        echo "$NEW_VERSION" > VERSION
+        echo "✅ Version set to $NEW_VERSION"
+
+  check:
+    desc: Run all project quality checks{{#language_go}} (tidy, lint, test){{/language_go}}{{#language_python}} (lint, test){{/language_python}}{{#language_node}} (lint, test){{/language_node}}
+    cmds:
+      {{#language_go}}
+      - task: tidy
+      {{/language_go}}
+      - task: lint
+      - task: test
+
+  {{#language_go}}
+  tidy:
+    desc: Tidy and verify Go module dependencies
+    cmds:
+      - go mod tidy
+      - go mod verify
+
+  lint:
+    desc: Run Go code linters and vet checks
+    cmds:
+      - go vet ./...
+      - |
+        if command -v golangci-lint >/dev/null 2>&1; then
+          golangci-lint run ./...
+        fi
+
+  test:
+    desc: Run all Go unit tests
+    cmds:
+      - go test -v ./...
+
+  test:cov:
+    desc: Run all Go tests with coverage profiling
+    cmds:
+      - go test -v -coverprofile=coverage.txt ./...
+      - go tool cover -func=coverage.txt
+
+  test:race:
+    desc: Run all Go tests with race detector
+    cmds:
+      - go test -v -race ./...
+
+  build:
+    desc: Build the {{projectName}} binary
+    cmds:
+      - mkdir -p bin
+      - go build -o bin/{{projectName}} cmd/{{projectName}}/main.go
+
+  run:
+    desc: Run {{projectName}}
+    cmds:
+      - go run cmd/{{projectName}}/main.go
+  {{/language_go}}
+
+  {{#language_python}}
+  lint:
+    desc: Run Python linters and checks
+    cmds:
+      - uv run ruff check .
+      - uv run mypy . || true
+
+  test:
+    desc: Run all Python unit tests
+    cmds:
+      - uv run pytest -v
+
+  test:cov:
+    desc: Run all Python tests with coverage profiling
+    cmds:
+      - uv run pytest --cov -v
+
+  build:
+    desc: Build the {{projectName}} package
+    cmds:
+      - uv build
+
+  run:
+    desc: Run {{projectName}}
+    cmds:
+      - uv run {{projectName}}
+  {{/language_python}}
+
+  {{#language_node}}
+  lint:
+    desc: Run Node linters
+    cmds:
+      - pnpm lint
+
+  test:
+    desc: Run all Node unit tests
+    cmds:
+      - pnpm test --run
+
+  test:watch:
+    desc: Run tests in watch mode
+    cmds:
+      - pnpm test
+
+  build:
+    desc: Build the {{projectName}} project
+    cmds:
+      - pnpm build
+
+  run:
+    desc: Run {{projectName}}
+    cmds:
+      - pnpm run start
+  {{/language_node}}
+
+  git:new-branch:
+    desc: "Create a new branch from main. USAGE: task git:new-branch FEAT_TYPE=feat BRANCH_NAME=feature-name"
+    cmds:
+      - |
+        if [ -z "{{.FEAT_TYPE}}" ] || [ -z "{{.BRANCH_NAME}}" ]; then
+          echo "Usage: task git:new-branch FEAT_TYPE=feat/fix/ci/docs/refactor/chore/test/perf BRANCH_NAME=my-feature"
+          exit 1
+        fi
+        git switch main
+        git pull origin main
+        git switch -c "{{.FEAT_TYPE}}/{{.BRANCH_NAME}}"
+
+  git:commit:
+    desc: 'Stage changes and create a formatted conventional commit. Usage: task git:commit TYPE=feat SCOPE=core MSG="implement feature" [FILES="file.go"]'
+    cmds:
+      - |
+        VALID_TYPES="feat fix docs style refactor perf test build ci chore"
+        TYPE="{{.TYPE}}"
+        SCOPE="{{.SCOPE}}"
+        MSG="{{.MSG}}"
+        FILES="{{.FILES}}"
+        if [ -z "$FILES" ]; then FILES="."; fi
+
+        if [ -z "$TYPE" ] || [ -z "$SCOPE" ] || [ -z "$MSG" ]; then
+          echo "ERROR: Parameters TYPE, SCOPE, and MSG are required!"
+          echo "Usage: task git:commit TYPE=feat SCOPE=core MSG=\"implement feature\" [FILES=\"file.go\"]"
+          echo "Allowed TYPE values: $VALID_TYPES"
+          exit 1
+        fi
+
+        IS_VALID=0
+        for t in $VALID_TYPES; do
+          if [ "$t" = "$TYPE" ]; then IS_VALID=1; break; fi
+        done
+
+        if [ $IS_VALID -eq 0 ]; then
+          echo "ERROR: Invalid commit type '$TYPE'."
+          echo "Allowed TYPE values are: $VALID_TYPES"
+          exit 1
+        fi
+
+        FULL_MSG="${TYPE}(${SCOPE}): ${MSG}"
+        git add $FILES
+        git commit -m "$FULL_MSG"
+        echo "✅ Committed: $FULL_MSG"
+
+  git:diff:
+    desc: Show diff of current branch against main
+    cmds:
+      - git diff main...HEAD
+
+  git:diff-head:
+    desc: Show diff of the latest commit
+    cmds:
+      - git diff HEAD~1
+
+  git:status:
+    desc: Check status and checks of current PR on GitHub
+    cmds:
+      - gh pr status 2>/dev/null || git status
+
+  git:pr:
+    desc: Create a GitHub PR using a permanent PR story file from ./pr_stories/ (auto-detects newest if FILE omitted)
+    vars:
+      CURRENT_BRANCH:
+        sh: git branch --show-current
+      STORY_FILE:
+        sh: |
+          if [ -n "{{.FILE}}" ]; then
+            F="{{.FILE}}"
+            F="${F#pr_stories/}"
+            if [[ "$F" != *.md ]]; then F="${F}.md"; fi
+            echo "$F"
+          else
+            find pr_stories -maxdepth 1 -name '[0-9]*.md' -type f 2>/dev/null | sort -V | tail -n 1 | xargs -n 1 basename 2>/dev/null
+          fi
+      STORY_PATH: "pr_stories/{{.STORY_FILE}}"
+      TITLE:
+        sh: |
+          if [ -n "{{.TITLE}}" ]; then
+            echo "{{.TITLE}}"
+          elif [ -n "{{.STORY_FILE}}" ]; then
+            echo "{{.STORY_FILE}}" | sed -E -e 's/\.md$//' -e 's/^[0-9]+-//' -e 's/^([a-z]+)-/\1: /' -e 's/-/ /g'
+          else
+            git branch --show-current
+          fi
+    preconditions:
+      - sh: command -v gh >/dev/null 2>&1
+        msg: "GitHub CLI (gh) is required but not installed."
+      - sh: 'test -n "{{.STORY_FILE}}"'
+        msg: "No PR story file found or specified. Usage: task git:pr [FILE=your-story.md]"
+      - sh: 'test -f "{{.STORY_PATH}}"'
+        msg: "The story file '{{.STORY_PATH}}' does not exist. Ensure it is placed in ./pr_stories/."
+    cmds:
+      - task: check
+      - 'echo "Using PR story: {{.STORY_PATH}}"'
+      - 'echo "PR Title: {{.TITLE}}"'
+      - cp "{{.STORY_PATH}}" temp_pr_story.md
+      - 'echo "Pushing branch {{.CURRENT_BRANCH}} to origin..."'
+      - git push origin {{.CURRENT_BRANCH}}
+      - 'echo "Creating pull request via GitHub CLI..."'
+      - gh pr create --title "{{.TITLE}}" --body-file temp_pr_story.md
+      - rm -f temp_pr_story.md
+      - 'echo "✅ PR created successfully!"'
+
+  git:merge:
+    desc: Squash and merge current branch's PR on GitHub and delete the branch
+    vars:
+      CURRENT_BRANCH:
+        sh: git branch --show-current
+    cmds:
+      - |
+        if [ "{{.CURRENT_BRANCH}}" = "main" ]; then
+          echo "Cannot merge main into main."
+          exit 1
+        fi
+        gh pr merge {{.CURRENT_BRANCH}} --squash --delete-branch
+        echo "✅ PR merged and remote branch deleted!"
+
+  git:post-merge-branch:
+    desc: Switch to main, hard reset to origin/main, and delete obsolete topic branch
+    vars:
+      CURRENT_BRANCH:
+        sh: git branch --show-current
+    cmds:
+      - |
+        BRANCH="{{.CURRENT_BRANCH}}"
+        if [ "$BRANCH" = "main" ]; then
+          git fetch origin main
+          git reset --hard origin/main
+          echo "✅ main reset to origin/main."
+          exit 0
+        fi
+        git switch main
+        git fetch origin main
+        git reset --hard origin/main
+        git branch -D "$BRANCH" 2>/dev/null || true
+        echo "✅ Switched to main and deleted local branch $BRANCH."
+
+  git:tag:
+    desc: Create annotated git release tag for current version in VERSION file
+    cmds:
+      - |
+        VER=$(cat VERSION 2>/dev/null || echo "0.1.0")
+        git tag -a "v$VER" -m "Release v$VER"
+        git push origin "v$VER"
+        echo "✅ Tagged and pushed v$VER"
+
+  log:
+    desc: "Open the project log for editing. Usage: task log"
+    cmds:
+      - |
+        EDITOR="${EDITOR:-nano}"
+        $EDITOR .plans/PROJECTLOG.md
+
+  log:status:
+    desc: Print the current project state summary
+    cmds:
+      - |
+        echo "=== {{projectName}} — Project Status ==="
+        echo ""
+        echo "Current version: $(cat VERSION)"
+        echo "Active branch: $(git branch --show-current)"
+        echo ""
+        git status --short
+
+  workflow:
+    desc: Print workflow quick reference
+    cmds:
+      - |
+        echo "🚀 {{projectName}} — Workflow Quick Reference"
+        echo ""
+        echo "📋 PHASE 1: PLANNING"
+        echo "   task log          # Open project log"
+        echo ""
+        echo "🌳 PHASE 2: BRANCH & SETUP"
+        echo "   task git:new-branch FEAT_TYPE=feat BRANCH_NAME=feature-name"
+        echo ""
+        echo "💻 PHASE 3: IMPLEMENTATION & TESTING"
+        echo "   task check        # Quality assurance"
+        echo ""
+        echo "✅ PHASE 4: COMMIT"
+        echo "   task git:commit TYPE=feat SCOPE=core MSG=\"message\" FILES=\"file\""
+        echo ""
+        echo "📝 PHASE 5: PR-STORY & PR"
+        echo "   cp .plans/templates/PR_STORY_EXTENDED.template.md pr_stories/NNN-name.md"
+        echo "   task git:pr FILE=pr_stories/NNN-name.md"
+        echo ""
+        echo "📚 Read more: .plans/WORKFLOW.md and .plans/QUICK_START.md"
+
+  pr:template:
+    desc: "Show PR story templates. Usage: task pr:template TYPE=compact|extended|visual"
+    vars:
+      TYPE: "{{.TYPE | default \"extended\"}}"
+    cmds:
+      - |
+        echo "PR Story Templates — Choose one:"
+        echo ""
+        echo "1. COMPACT       (~500–800 words, 0–1 diagram)"
+        echo "   Bug fixes, small features, single files"
+        echo ""
+        echo "2. EXTENDED      (~1500–3000 words, 1–3 diagrams)"
+        echo "   Large features, multi-layer, architecture"
+        echo ""
+        echo "3. VISUAL        (~800–1500 words, 3–5 diagrams)"
+        echo "   Data pipelines, UI flows, architectural changes"
+        echo ""
+        echo "Usage:"
+        echo "   cp .plans/templates/PR_STORY_COMPACT.template.md pr_stories/001-type-name.md"
+        echo "   cp .plans/templates/PR_STORY_EXTENDED.template.md pr_stories/001-type-name.md"
+        echo "   cp .plans/templates/PR_STORY_VISUAL.template.md pr_stories/001-type-name.md"

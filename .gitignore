@@ -1,0 +1,19 @@
+# Project-level configs (generated per project)
+projects/*.yaml
+
+# OS & IDE
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temp files
+*.tmp
+*.temp
+/temp/
+
+# Logs
+*.log
+

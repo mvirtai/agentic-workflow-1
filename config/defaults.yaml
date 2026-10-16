@@ -1,0 +1,143 @@
+# Global Defaults — Inherited by all projects
+version: "1.0"
+
+workflow:
+  phases: 5
+  enabled_phases:
+    - planning
+    - branch
+    - implementation
+    - commit
+    - pr
+  auto_commit: false
+
+ci:
+  platform: github
+  coverage_threshold: 90
+  markdown_linting: true
+  codecov_enabled: false  # Set per-project
+
+git:
+  branch_naming: "type/kebab-case"
+  commit_format: "conventional"
+  # Valid types: feat, fix, test, docs, refactor, perf, ci, chore, build, style
+  commit_types:
+    - feat
+    - fix
+    - test
+    - docs
+    - refactor
+    - perf
+    - ci
+    - chore
+    - build
+    - style
+
+versioning:
+  strategy: semver
+  files:
+    - VERSION
+
+pr_templates:
+  compact: true
+  extended: true
+  visual: true
+  default: extended
+  naming_pattern: "[NNN]-[type]-[kebab-case-name].md"
+
+documentation:
+  workflows_dir: ".plans"
+  steering_dir: ".kiro/steering"
+  hooks_dir: ".kiro/hooks"
+  pr_stories_dir: "pr_stories"
+
+language_defaults:
+  go:
+    min_version: "1.21"
+    build_cmd: "go build -o bin/{{.projectName}} cmd/{{.projectName}}/main.go"
+    test_cmd: "go test -v ./..."
+    lint_cmd: "go vet ./..."
+    modules:
+      - ./...
+  
+  python:
+    min_version: "3.9"
+    package_manager: uv
+    build_cmd: "uv build"
+    test_cmd: "uv run pytest -v"
+    lint_cmd: "uv run ruff check ."
+  
+  node:
+    min_version: "18"
+    package_manager: pnpm
+    build_cmd: "pnpm build"
+    test_cmd: "pnpm test --run"
+    lint_cmd: "pnpm lint"
+  
+  react:
+    min_version: "19.3"
+    package_manager: pnpm
+    build_cmd: "pnpm build"
+    test_cmd: "pnpm test --run"
+    lint_cmd: "pnpm lint"
+    dev_cmd: "pnpm dev"
+    conventions:
+      - "React Compiler enabled (babel plugin)"
+      - "Use 'use server' for Server Components"
+      - "Use 'use client' for Client Components"
+      - "Prefer Server Components over Client Components"
+      - "Use useAction() for form submissions instead of event handlers"
+      - "Avoid useEffect — use direct state management or Server Components"
+      - "Avoid useRef for component state — use useState instead"
+      - "Prefer derived state over useRef"
+      - "Use React hooks properly: useState, useContext, useCallback (when needed)"
+      - "Avoid useLayoutEffect unless absolutely necessary"
+      - "Use Suspense for async operations"
+      - "Components should be pure functions (no side effects)"
+      - "Use CSS Modules or Tailwind for styling (avoid inline styles)"
+      - "Prop drilling should be minimized (use Context API or composition)"
+      - "Keep components small and focused (single responsibility)"
+    eslint_config:
+      extends:
+        - "eslint:recommended"
+        - "plugin:react/recommended"
+        - "plugin:react-compiler/recommended"
+      rules:
+        "react/no-unescaped-entities": "error"
+        "react-compiler/react-compiler": "error"
+        "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+    tsconfig_compiler_options:
+      target: "ES2020"
+      lib: ["ES2020", "DOM", "DOM.Iterable"]
+      jsx: "react-jsx"
+      jsxImportSource: "react"
+      strict: true
+      skipLibCheck: true
+      esModuleInterop: true
+      experimentalDecorators: true
+    package_defaults:
+      react: "^19.3.0"
+      react-dom: "^19.3.0"
+      typescript: "^5.6"
+      "@types/react": "^19.3"
+      "@types/react-dom": "^19.3"
+      tailwindcss: "^4.0"
+      autoprefixer: "^10.4"
+      postcss: "^8.4"
+
+# Taskfile initialization during project setup
+taskfile:
+  enabled: true
+  version: "3"
+  include_sections:
+    - default
+    - version
+    - check
+    - workflow
+    - git
+    - build
+    - test
+    - run
+    - log
+    - pr
+

@@ -1,0 +1,338 @@
+UNIVERSAL AGENTIC WORKFLOW SYSTEM — FILE MANIFEST
+===================================================
+
+Created: 2026-10-15
+Location: ~/.agentic/
+
+STRUCTURE
+---------
+
+~/.agentic/
+├── README.md                          # User guide & quick start
+├── ARCHITECTURE.md                    # Technical design & extensibility
+├── SYSTEM_STATUS.md                   # Project status & summary
+├── FILE_MANIFEST.txt                  # This file
+├── LICENSE                            # PolyForm Noncommercial 1.0.0
+├── .agentic.schema.yaml              # Configuration schema
+│
+├── config/
+│   ├── defaults.yaml                 # Global defaults (all projects)
+│   └── templates/
+│       ├── ci-github.yaml            # CI/CD config template
+│       └── [more templates]
+│
+├── templates/
+│   ├── project/
+│   │   ├── Taskfile.yml.mustache           # Main automation (Go/Python/Node/React)
+│   │   └── .markdownlint.json.mustache     # Markdown linting config
+│   │
+│   ├── ci/
+│   │   ├── github-actions-go.yml.mustache       # Go CI/CD workflow
+│   │   ├── github-actions-python.yml.mustache   # Python (uv) CI/CD workflow
+│   │   └── github-actions-node.yml.mustache     # Node.js/React CI/CD workflow
+│   │
+│   └── pr-stories/
+│       ├── COMPACT.md.mustache      # PR template: small changes
+│       ├── EXTENDED.md.mustache     # PR template: large features
+│       └── VISUAL.md.mustache       # PR template: diagrams & flows
+│
+├── scripts/
+│   ├── init-project.sh               # Initialize new project
+│   ├── render-templates.sh           # [Coming soon]
+│   └── validate-config.sh            # [Coming soon]
+│
+└── projects/
+    └── [generated per project]       # Project configs created on init
+
+FILE DETAILS
+------------
+
+ROOT DOCUMENTATION
+─────────────────
+README.md
+  • Quick start guide
+  • System overview & features
+  • Configuration reference
+  • Language-specific defaults (Go, Python, Node, React)
+  • Troubleshooting guide
+
+ARCHITECTURE.md
+  • System design & layers
+  • Configuration schema
+  • Template system
+  • 5-phase workflow design
+  • Customization points
+  • Performance considerations
+  • Future enhancements
+
+SYSTEM_STATUS.md
+  • Project completion status
+  • Components implemented
+  • Testing instructions
+  • Next steps (Phase 2+)
+
+FILE_MANIFEST.txt
+  • This file
+
+LICENSE
+  • PolyForm Noncommercial License 1.0.0
+
+.agentic.schema.yaml
+  • Configuration schema documentation
+  • Global defaults structure
+  • Project config structure
+  • Language-specific configs
+
+CONFIGURATION FILES (~/.agentic/config/)
+────────────────────────────────────────
+defaults.yaml
+  • Global workflow settings (phases, git conventions)
+  • Language defaults (Go, Python, Node, React)
+  • CI/CD defaults (GitHub, coverage thresholds)
+  • PR template settings
+  • Taskfile configuration
+
+TEMPLATES (~/.agentic/templates/)
+─────────────────────────────────
+Taskfile.yml.mustache (PROJECT LEVEL)
+  • Universal task automation
+  • Language-specific tasks (Go: go test, Python: pytest, etc.)
+  • Git workflow helpers (branch, commit, PR)
+  • Version management
+  • Markdown rendering commands
+  • ~700 lines, supports all languages
+
+.markdownlint.json.mustache
+  • Markdown linting rules
+  • MD004 enforcement (dashes for lists)
+  • Line length: 120 chars
+  • Excludes code blocks & links
+
+CI/CD WORKFLOWS (~/.agentic/templates/ci/)
+──────────────────────────────────────────
+github-actions-go.yml.mustache
+  • Go test matrix: 1.21, 1.22
+  • go vet, golangci-lint
+  • Coverage upload to Codecov
+  • Markdown linting
+
+github-actions-python.yml.mustache
+  • Python matrix: 3.9, 3.11, 3.12
+  • uv package manager
+  • Ruff linting, mypy type checking
+  • pytest with coverage
+  • Codecov upload
+  • Markdown linting
+
+github-actions-node.yml.mustache
+  • Node.js matrix: 18, 20, 22
+  • pnpm package manager + caching
+  • ESLint linting
+  • TypeScript type checking
+  • Build & test
+  • Codecov upload
+  • Markdown linting
+
+PR STORY TEMPLATES (~/.agentic/templates/pr-stories/)
+────────────────────────────────────────────────────
+COMPACT.md.mustache
+  • 500–800 words
+  • 0–1 diagram
+  • Use: bugfixes, small features, single files
+  • Sections: Summary, What Changed, Quality Checks
+
+EXTENDED.md.mustache
+  • 1500–3000 words
+  • 1–3 diagrams
+  • Use: large features, multi-layer, architectural changes
+  • Sections: Executive Summary, Problem, Solution, Design, Files, Tests, Checklist
+
+VISUAL.md.mustache
+  • 800–1500 words
+  • 3–5 diagrams (Mermaid, ASCII)
+  • Use: data pipelines, UI flows, architectural changes
+  • Sections: Overview, Data Flow, Architecture, Components, Tests, Checklist
+
+SCRIPTS (~/.agentic/scripts/)
+────────────────────────────
+init-project.sh
+  • Initialize new project in any language
+  • Creates project config at ~/.agentic/projects/<name>.yaml
+  • Generates Taskfile.yml (language-specific)
+  • Sets up .github/workflows/ci.yml
+  • Creates project directories
+  • Initializes markdown linting config
+  • Usage: init-project.sh <name> <language> [root]
+  • Languages supported: go, python, node, react
+
+render-templates.sh [COMING SOON]
+  • Advanced Mustache template rendering
+  • Handle complex conditionals & loops
+  • For projects needing more sophisticated templates
+
+validate-config.sh [COMING SOON]
+  • Validate project config against schema
+  • Check missing required fields
+  • Suggest corrections
+
+PROJECT CONFIGS (~/.agentic/projects/)
+──────────────────────────────────────
+<project-name>.yaml (GENERATED ON INIT)
+  • Metadata: name, language, root path, created date
+  • Workflow: phases, enabled phases
+  • CI: platform, coverage threshold
+  • Language-specific settings
+  • Inherits from defaults.yaml
+
+LANGUAGE SUPPORT
+----------------
+
+Go
+  • Min version: 1.21
+  • Build: go build -o bin/<name>
+  • Test: go test -v ./...
+  • Lint: go vet ./...
+  • Linter: golangci-lint
+  • Coverage: Codecov
+  • CI/CD: github-actions-go.yml
+
+Python
+  • Min version: 3.9
+  • Package manager: uv
+  • Build: uv build
+  • Test: uv run pytest -v
+  • Lint: uv run ruff check .
+  • Type check: uv run mypy .
+  • Coverage: Codecov
+  • CI/CD: github-actions-python.yml
+
+Node.js
+  • Min version: 18
+  • Package manager: pnpm
+  • Build: pnpm build
+  • Test: pnpm test --run
+  • Lint: pnpm lint
+  • Type check: pnpm tsc --noEmit
+  • Coverage: Codecov
+  • CI/CD: github-actions-node.yml
+
+React
+  • Min version: 19.3 (with React Compiler)
+  • Package manager: pnpm
+  • Build: pnpm build
+  • Test: pnpm test --run
+  • Lint: pnpm lint (with React Compiler rules)
+  • Type check: pnpm tsc --noEmit
+  • Conventions:
+    - 'use server' / 'use client' directives
+    - Prefer Server Components
+    - useAction() for forms
+    - NO: useEffect, useRef, useLayoutEffect
+    - YES: Derived state, Suspense
+  • Coverage: Codecov
+  • CI/CD: github-actions-node.yml
+
+CONFIGURATION INHERITANCE
+--------------------------
+
+Project Config (~/.agentic/projects/<name>.yaml)
+    ↓ (extends)
+Global Defaults (~/.agentic/config/defaults.yaml)
+
+Project-specific settings override global defaults.
+Example:
+  • Global: go min_version = 1.21
+  • Project override: go min_version = 1.22
+
+KEY FEATURES
+------------
+
+✅ Configuration-Driven
+   • YAML-based defaults
+   • Per-project overrides
+   • No hard-coded values
+
+✅ Template-Based
+   • Mustache templates
+   • Easy rendering & customization
+   • Simple sed-based substitution
+
+✅ Multi-Language
+   • Go, Python, Node, React
+   • Extensible to new languages
+   • Language-specific task implementations
+
+✅ Automated Setup
+   • Single command: init-project.sh
+   • Generates 20+ files/configs
+   • Ready-to-use CI/CD
+
+✅ Standardized Workflow
+   • 5-phase linear process
+   • Conventional Commits
+   • Git branch naming conventions
+   • PR story templates
+
+✅ CI/CD Integration
+   • GitHub Actions for all languages
+   • Coverage tracking (Codecov)
+   • Markdown linting
+   • Language-specific validation
+
+TOTAL FILES: ~20 core files + 100+ generated per project
+
+INSTALLATION STATUS
+-------------------
+
+✅ Complete — MVP Phase 1 (Local System)
+
+Core system is production-ready for single-machine use.
+
+Next Phase 2 items:
+  [ ] GitHub backup repo (github.com/mvirtai/agentic-workflow)
+  [ ] Multi-machine sync automation
+  [ ] Advanced template rendering (mo/handlebars)
+  [ ] Interactive setup wizard
+  [ ] Kiro IDE integration
+
+HOW TO USE
+----------
+
+Initialize a project:
+  ~/.agentic/scripts/init-project.sh my-project go /path/to/my-project
+
+View system:
+  cat ~/.agentic/README.md              # Quick start
+  cat ~/.agentic/ARCHITECTURE.md        # Design details
+  ls -la ~/.agentic/                    # Directory structure
+
+Update defaults:
+  nano ~/.agentic/config/defaults.yaml
+
+View project config:
+  cat ~/.agentic/projects/my-project.yaml
+
+SUPPORT & QUESTIONS
+-------------------
+
+For usage:
+  • ~/.agentic/README.md — Quick start guide
+  • ~/.agentic/ARCHITECTURE.md — Technical details
+
+For customization:
+  • Edit ~/.agentic/config/defaults.yaml
+  • Edit ~/.agentic/templates/ for templates
+  • Run init-project.sh --help
+
+For bugs/enhancements:
+  • Check ~/.agentic/SYSTEM_STATUS.md (Known Limitations)
+  • Review ARCHITECTURE.md (Future Enhancements)
+
+LICENSE
+-------
+
+All files: PolyForm Noncommercial License 1.0.0
+See ~/.agentic/LICENSE
+
+---
+End of Manifest

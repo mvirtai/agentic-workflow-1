@@ -1,0 +1,79 @@
+# Universal Agentic Workflow System — Configuration Schema
+# This YAML defines the structure for project configs and global defaults
+
+version: "1.0"
+description: "Schema for agentic workflow projects"
+
+# Global defaults (inherited by all projects)
+defaults:
+  workflow:
+    phases: 5  # 5-phase workflow (planning, branch, implementation, commit, pr)
+    language: go  # Default language (extensible to py, node, rust, etc.)
+  ci:
+    platform: github  # github, gitlab, gitea, etc.
+    coverage_threshold: 90  # Min coverage %
+  git:
+    branch_naming: "type/kebab-case"  # feat/feature-name, fix/bug-name, etc.
+    commit_format: "conventional"  # Conventional Commits format
+    pr_template_style: extended  # extended, compact, visual
+  versioning:
+    strategy: semver  # semantic versioning
+    files: ["VERSION", "go.mod", "package.json"]  # Files to update
+
+# Project-specific config structure
+project:
+  name: string  # kebab-case project name (e.g., guitar-tuner)
+  description: string  # One-line project description
+  
+  metadata:
+    version: string  # Current version (e.g., 0.1.0)
+    root: string  # Project root path
+    git:
+      remote: string  # GitHub/GitLab/Gitea remote URL
+      default_branch: string  # main, master, etc.
+  
+  language: string  # go, python, node, rust, etc.
+  
+  workflow:
+    phases: integer  # 3, 5, 7, custom
+    enabled_phases: [string]  # ["planning", "branch", "implementation", "commit", "pr"]
+    auto_commit: boolean  # Auto-commit after each phase (default: false)
+  
+  ci:
+    platform: string  # github, gitlab, gitea
+    # Platform-specific config below
+    
+  pr_templates:
+    compact: boolean  # Enable compact template
+    extended: boolean  # Enable extended template
+    visual: boolean  # Enable visual template
+    default: string  # Default template (extended)
+  
+  # Language-specific configs
+  go:
+    modules: [string]  # Go modules to include in tests (./internal/dsp, ./cmd/...)
+    min_version: string  # Minimum Go version (e.g., 1.21)
+  
+  python:
+    entrypoint: string  # Main module/script
+    min_version: string  # Minimum Python version (e.g., 3.9)
+    poetry_or_pip: string  # poetry or pip
+  
+  node:
+    package_manager: string  # npm, yarn, pnpm
+    node_version: string  # Minimum Node version (e.g., 18)
+  
+  # Steering & documentation
+  documentation:
+    steering_dir: string  # .kiro/steering or .agentic/steering
+    workflow_doc: string  # Path to WORKFLOW.md
+    quick_start: string  # Path to QUICK_START.md
+    project_log: string  # Path to PROJECTLOG.md
+  
+  # Automation hooks
+  hooks:
+    post_branch_create: [string]  # Commands to run after branch creation
+    pre_commit: [string]  # Commands to run before commit (linting, testing)
+    post_commit: [string]  # Commands to run after commit
+    pre_pr: [string]  # Commands to run before PR creation
+
